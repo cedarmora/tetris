@@ -438,7 +438,9 @@ class ScoreBoard():
         self.level_text.draw(self.canvas)
 
     def add_score(self, number_row):
-        '''add amount to score based upon number of rows completed.
+        ''' Parameters: number_row
+            Return value: type: Boolean
+            add amount to score based upon number of rows completed.
         '''
         self.score += ScoreBoard.ROWS_POINTS[number_row] * (self.level + 1)       
         self.score_text.setText("Score: %s" % self.score)
@@ -447,6 +449,9 @@ class ScoreBoard():
         return False
     
     def set_level(self):
+        ''' set the level of the game based upon how many points have been
+            received.
+        '''
         if self.score > ((self.level + 1) ** 2) * 50:
             self.level += 1
             self.level_text.setText("Level: %s" % self.level)
@@ -529,8 +534,6 @@ class Tetris():
             3. create a new random shape and set current_shape attribute
             4. If the shape cannot be drawn on the board, display a
                game over message
-
-            return False
 
         '''
         dx = self.DIRECTION[direction][0]
