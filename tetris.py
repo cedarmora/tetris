@@ -449,8 +449,10 @@ class ScoreBoard():
         return False
     
     def set_level(self):
-        ''' set the level of the game based upon how many points have been
-            received.
+        ''' Return value: type: Boolean
+            set the level of the game based upon how many points have been
+            received. Returns true if the points have become high enough
+            to increase level.
         '''
         if self.score > ((self.level + 1) ** 2) * 50:
             self.level += 1
