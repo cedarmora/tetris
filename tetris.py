@@ -454,7 +454,7 @@ class ScoreBoard():
             received. Returns true if the points have become high enough
             to increase level.
         '''
-        if self.score > ((self.level + 1) ** 2) * 50:
+        if self.score > 50*((self.level + 1) ** 2):
             self.level += 1
             self.level_text.setText("Level: %s" % self.level)
             return True
