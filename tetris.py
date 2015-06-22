@@ -1,4 +1,5 @@
 from graphics import *
+from Tkinter import RIGHT, LEFT, TOP, BOTTOM
 import random
 
 ############################################################
@@ -62,7 +63,7 @@ class Block(Rectangle):
 # SHAPE CLASS
 ############################################################
 
-class Shape():
+class Shape(object):
     ''' Shape class:
         Base class for all the tetris shapes
         Attributes: blocks - type: list - the list of blocks making up the shape
@@ -95,6 +96,12 @@ class Shape():
         ''' 
         for block in self.blocks:
             block.draw(win)
+
+    def undraw(self):
+        ''' Undraws the shape.
+        '''
+        for block in self.blocks:
+            block.undraw()
 
     def move(self, dx, dy):
         ''' Parameters: dx - type: int
@@ -270,19 +277,21 @@ class Board():
 
         Attributes: width - type:int - width of the board in squares
                     height - type:int - height of the board in squares
-                    canvas - type:CanvasFrame - where the pieces will be drawn
+                    canvas_frame - type:CanvasFrame - where the pieces will be drawn
                     grid - type:Dictionary - keeps track of the current state of
                     the board; stores the blocks for a given position
     '''
+    BOARD_WIDTH = 10
+    BOARD_HEIGHT = 20
     
-    def __init__(self, win, width, height):
-        self.width = width
-        self.height = height
+    def __init__(self, win):
+        self.width = self.BOARD_WIDTH
+        self.height = self.BOARD_HEIGHT
 
         # create a canvas to draw the tetris shapes on
-        self.canvas = CanvasFrame(win, self.width * Block.BLOCK_SIZE,
+        self.canvas_frame = CanvasFrame(win, self.width * Block.BLOCK_SIZE,
                                        self.height * Block.BLOCK_SIZE)
-        self.canvas.setBackground('light gray')
+        self.canvas_frame.setBackground('light gray')
 
         # create an empty dictionary
         # currently we have no shapes on the board
@@ -296,7 +305,7 @@ class Board():
             and returns True, otherwise it returns False
         '''
         if shape.can_move(self, 0, 0):
-            shape.draw(self.canvas)
+            shape.draw(self.canvas_frame)
             return True
         return False
 
@@ -315,7 +324,7 @@ class Board():
             3. otherwise return True
             
         '''
-        if (0 <= x < self.width) and (0 <= y < self.height) and (x, y) not in self.grid:
+        if (0 <= x < self.width) and (-1 <= y < self.height) and (x, y) not in self.grid:
             return True
         else:
             return False
@@ -412,7 +421,7 @@ class Board():
         '''
         self.youjustlostthegame = Text(Point(self.width * Block.BLOCK_SIZE / 2, self.height * Block.BLOCK_SIZE / 8), "You just lost the game.")
         self.youjustlostthegame.setFill("blue")
-        self.youjustlostthegame.draw(self.canvas)
+        self.youjustlostthegame.draw(self.canvas_frame)
 ############################################################
 # SCOREBOARD CLASS
 ############################################################
@@ -422,7 +431,7 @@ class ScoreBoard():
         Attributes:
             ROWS_POINTS - type: dictionary - converts number of rows completed to points to be added
             score - type: int - current game score
-            canvas - type: CanvasFrame - where ScoreBoard is drawn
+            canvas_frame - type: CanvasFrame - where ScoreBoard is drawn
     '''
 
     ROWS_POINTS = {0: 0, 1: 40, 2: 100, 3: 300, 4: 1200}
@@ -431,11 +440,11 @@ class ScoreBoard():
         self.score = 0
         self.level = 0
         self.width = width
-        self.canvas = CanvasFrame(win, self.width * Block.BLOCK_SIZE, Block.BLOCK_SIZE)
+        self.canvas_frame = CanvasFrame(win, self.width * Block.BLOCK_SIZE, Block.BLOCK_SIZE)
         self.score_text = Text(Point(self.width * 3*Block.BLOCK_SIZE/4, Block.BLOCK_SIZE/2), "Score: %s" % self.score)
-        self.score_text.draw(self.canvas)
+        self.score_text.draw(self.canvas_frame)
         self.level_text = Text(Point(self.width * Block.BLOCK_SIZE/4, Block.BLOCK_SIZE/2), "Level: %s" % self.level)
-        self.level_text.draw(self.canvas)
+        self.level_text.draw(self.canvas_frame)
 
     def add_score(self, number_row):
         ''' Parameters: number_row
@@ -444,9 +453,6 @@ class ScoreBoard():
         '''
         self.score += ScoreBoard.ROWS_POINTS[number_row] * (self.level + 1)       
         self.score_text.setText("Score: %s" % self.score)
-        if self.set_level():
-            return True
-        return False
     
     def set_level(self):
         ''' Return value: type: Boolean
@@ -460,6 +466,26 @@ class ScoreBoard():
             return True
         return False
 
+
+############################################################
+# PIECEPREVIEW CLASS
+############################################################
+
+class PiecePreview(Board):
+    ''' PiecePreview class: Shows the next piece to enter the gameboard
+        
+    '''
+    def __init__(self, win, width, height):
+        self.width = 5
+        self.height = 5
+        self.grid = {}
+
+        # create a canvas to draw the tetris shapes on
+        self.canvas_frame = CanvasFrame(win, self.width * Block.BLOCK_SIZE,
+                                       self.height * Block.BLOCK_SIZE)
+        self.canvas_frame.setBackground('light gray')
+
+        
 
 
 ############################################################
@@ -481,20 +507,30 @@ class Tetris():
     
     SHAPES = [I_shape, J_shape, L_shape, O_shape, S_shape, T_shape, Z_shape]
     DIRECTION = {'Left':(-1, 0), 'Right':(1, 0), 'Down':(0, 1)}
-    BOARD_WIDTH = 10
-    BOARD_HEIGHT = 20
+    SCOREBOARD_WIDTH = 5
+    SCOREBOARD_HEIGHT = 5
     
     def __init__(self, win):
-        self.board = Board(win, self.BOARD_WIDTH, self.BOARD_HEIGHT)
         self.win = win
+        #Create Piece Preview window, pack it to the right, give it it's first shape, and draw that shape
+        self.piece_preview = PiecePreview(win, self.SCOREBOARD_WIDTH, self.SCOREBOARD_HEIGHT)
+        self.piece_preview.canvas_frame.canvas.pack(side=RIGHT)
+        self.next_shape = self.create_new_shape(self.piece_preview)
+        self.piece_preview.draw_shape(self.next_shape)
+        #Create the Board, pack it in the top left.
+        self.board = Board(win)
+        self.board.canvas_frame.canvas.pack(side=TOP)
+        #Create the Scoreboard, and pack it in the bottom left
+        self.scoreboard = ScoreBoard(win, self.board.width)
+        self.scoreboard.canvas_frame.canvas.pack(side=BOTTOM)
         self.delay = 1000 #ms
 
         # sets up the keyboard events
         # when a key is called the method key_pressed will be called
         self.win.bind_all('<Key>', self.key_pressed)
 
-        # set the current shape to a random new shape
-        self.current_shape = self.create_new_shape()
+        #create the current shape and next shape
+        self.current_shape = self.create_new_shape(self.board)
 
         # Draw the current_shape on the board (take a look at the
         # draw_shape method in the Board class)
@@ -503,17 +539,14 @@ class Tetris():
         # For Step 9:  animate the shape!
         self.animate_shape()
 
-        # Create scoreboard
-        self.scoreboard = ScoreBoard(win, self.BOARD_WIDTH)
-
-    def create_new_shape(self):
+    def create_new_shape(self, board):
         ''' Return value: type: Shape
             
             Create a random new shape that is centered
              at y = 0 and x = int(self.BOARD_WIDTH/2)
             return the shape
         '''
-        new_shape = Tetris.SHAPES[random.randint(0,6)](Point(int(self.BOARD_WIDTH/2), 0))
+        new_shape = Tetris.SHAPES[random.randint(0,6)](Point(int(board.width/2), 0))
         return new_shape
     
     def animate_shape(self):
@@ -545,9 +578,13 @@ class Tetris():
             return True
         elif direction == 'Down':
             self.board.add_shape(self.current_shape)
-            if self.scoreboard.add_score(self.board.remove_complete_rows()):
+            self.scoreboard.add_score(self.board.remove_complete_rows())
+            if self.scoreboard.set_level():
                 self.delay = int(.9 * self.delay)
-            self.current_shape = self.create_new_shape()
+            self.next_shape.undraw()
+            self.current_shape = type(self.next_shape)(Point(int(self.piece_preview.width/2), 0))
+            self.next_shape = self.create_new_shape(self.piece_preview)
+            self.piece_preview.draw_shape(self.next_shape)
             if not self.board.draw_shape(self.current_shape):
                 self.board.game_over()
             return False
@@ -585,7 +622,6 @@ class Tetris():
             self.do_rotate()
         else:
             self.do_move(key)
-        print key
        
 ################################################################
 # Start the game
