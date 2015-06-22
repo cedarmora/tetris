@@ -582,7 +582,7 @@ class Tetris():
             if self.scoreboard.set_level():
                 self.delay = int(.9 * self.delay)
             self.next_shape.undraw()
-            self.current_shape = type(self.next_shape)(Point(int(self.piece_preview.width/2), 0))
+            self.current_shape = type(self.next_shape)(Point(int(self.board.width/2), 0))
             self.next_shape = self.create_new_shape(self.piece_preview)
             self.piece_preview.draw_shape(self.next_shape)
             if not self.board.draw_shape(self.current_shape):
