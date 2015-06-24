@@ -571,25 +571,28 @@ class Tetris():
                game over message
 
         '''
-        dx = self.DIRECTION[direction][0]
-        dy = self.DIRECTION[direction][1]
-        if self.current_shape.can_move(self.board, dx, dy):
-            self.current_shape.move(dx, dy)
-            return True
-        elif direction == 'Down':
-            self.board.add_shape(self.current_shape)
-            self.scoreboard.add_score(self.board.remove_complete_rows())
-            if self.scoreboard.set_level():
-                self.delay = int(.9 * self.delay)
-            self.next_shape.undraw()
-            self.current_shape = type(self.next_shape)(Point(int(self.board.width/2), 0))
-            self.next_shape = self.create_new_shape(self.piece_preview)
-            self.piece_preview.draw_shape(self.next_shape)
-            if not self.board.draw_shape(self.current_shape):
-                self.board.game_over()
-            return False
-        else:
-            return False
+        try:
+            dx = self.DIRECTION[direction][0]
+            dy = self.DIRECTION[direction][1]
+            if self.current_shape.can_move(self.board, dx, dy):
+                self.current_shape.move(dx, dy)
+                return True
+            elif direction == 'Down':
+                self.board.add_shape(self.current_shape)
+                self.scoreboard.add_score(self.board.remove_complete_rows())
+                if self.scoreboard.set_level():
+                    self.delay = int(.9 * self.delay)
+                self.next_shape.undraw()
+                self.current_shape = type(self.next_shape)(Point(int(self.board.width/2), 0))
+                self.next_shape = self.create_new_shape(self.piece_preview)
+                self.piece_preview.draw_shape(self.next_shape)
+                if not self.board.draw_shape(self.current_shape):
+                    self.board.game_over()
+                return False
+            else:
+                return False
+        except KeyError:
+            pass
 
 
     def do_rotate(self):
