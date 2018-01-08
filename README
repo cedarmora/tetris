@@ -1,3 +1,5 @@
 This is the Tetris Project, using the template given by MIT courseware's material. It was done as part of the Mechanical MOOC.
 
+The main code is in tetris.py
+
 It depends upon the graphics.py file, the tkinter library, and of course, the python interpreter.
